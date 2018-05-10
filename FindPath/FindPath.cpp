@@ -1,4 +1,23 @@
+/*
+Search using A*
 
+Please open in Visual Studio
+
+Create Point-> Expand point-> check if solved-> repeat
+
+All points contain their move list, id, and esstimated cost
+
+It is possible to easily add some additional features such as different terains, disadvantage to turning and so on.
+
+MapSearch is created so that point's don't have to contain too much information.
+
+I'm using Manhatan instead of eucelidan because it's not allowed to move diagonally, so it's not technically the shortest path
+
+I checked for memory leaks with visual leak detector for vs, it seems to work fine. I wasn't able to use valgrind cause I made this in visual c++ and for some reason g++ cannot read it.
+In general performance should be good, I didn't do anything special for multithreaded environment, I think this is light enough for one thread
+
+according to my time tracker it took my 8h to make this. Is this way to much? In my defense I didn't use c++ for a while, so I was a bit slow at the start
+*/
 
 
 
@@ -129,6 +148,13 @@ int FindPath(const int nStartX, const int nStartY,
 	//loop looks like this: expand points, sort them in order of distance to goal(witth heuristic)
 	do
 	{
+		
+		if ((*ToExpand)[ToExpand->size()-1]->movesTillHere >= nOutBufferSize) //when the best possible bet is out of buffer it's safe to assume that others wont make it as well
+															
+		{
+			//I've decided that returning -1 makes more sense than calling another function with higher buffer, cause buffer is specified for some reason and it also might be a gamplay feature. 
+			break;
+		}
 
 		CheckedStates++;
 		Point* tmp = ToExpand->back(); // I'm using tmp because I'm going to add elements to toexpand later, andthen I wouldn't be able to pop back this element
@@ -145,9 +171,9 @@ int FindPath(const int nStartX, const int nStartY,
 			if (ToExpand->size() > 1) //don't want to sort 1 element
 			{ 
 				sort(ToExpand->begin(), ToExpand->end(),
-					[](const Point* a, const Point* b) //I could hide it or I could just admit that I took it from stack overflow 
-													   //I should think more about lambda expressions, I also edited it to use pointers to my class and whatnot
-				{										//I also added the 2nd expresion so that when estimated cost is equal lower moves value has a prefrence
+					[](const Point* a, const Point* b) //I could hide it but let's be fair I got idea of using lambdas in sort from stack overflow 
+													   // I also edited it to use pointers to my class and whatnot
+				{										//and I added the 2nd expresion so that when estimated cost is equal, lower moves value has a prefrence
 					if (a->EstimatedCostToGoal != b->EstimatedCostToGoal)
 						return (
 							a->EstimatedCostToGoal > b->EstimatedCostToGoal
@@ -192,7 +218,7 @@ int FindPath(const int nStartX, const int nStartY,
 	}
 	else
 	{
-		for (int k = ToExpand->size(); k > 1; k--) {
+		for (int k = ToExpand->size(); k > 0; k--) {
 			delete (*ToExpand)[k - 1];
 		}
 
