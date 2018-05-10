@@ -50,7 +50,7 @@ void MapSearch::Expand(int * id, Point * Expand)
 		}
 		int k = mapWidth;
 		if (*id + mapWidth != Expand->prevPos && 
-			*id  <= (mapHeight*mapWidth-mapWidth) &&
+			*id  < (mapHeight*mapWidth-mapWidth) &&
 			(*map)[*id + mapWidth] == 1 && 
 			find_if(toExpand->begin(), toExpand->end(), [id,k](const Point * Pnt) {return Pnt->ID == *id + k; }) == toExpand->end())
 		{
@@ -78,9 +78,11 @@ void MapSearch::CalculateCost( Point * p)
 	//but basicly I'm just adding manhatan distance to amount of moves from start, so basiclaly a* I should also add some prefrence for distance but I wanted estimated distance to be an int
 	//later this quantity is used to sort elements to be expanded
 	if (p->ID != goalID)
-	p->EstimatedDistanceToGoal = p->movesTillHere+abs((p->ID-(p->ID/mapWidth))- goalID - (goalID / mapWidth))+abs((p->ID / mapWidth)- (goalID / mapWidth));
+	p->EstimatedCostToGoal = p->movesTillHere+
+		1.1*(abs((p->ID-((p->ID)/mapWidth)*mapWidth)- (goalID - (goalID / mapWidth)*mapWidth))+
+		abs((p->ID / mapWidth)- (goalID / mapWidth)));
 	else {
-		p->EstimatedDistanceToGoal = 0;
+		p->EstimatedCostToGoal = 0;
 		(*toExpand)[0] = p;
 	}
 	
@@ -113,17 +115,18 @@ int FindPath(const int nStartX, const int nStartY,
 	ToExpand->push_back( new Point(nStartX+nMapWidth*nStartY));
 	
 	bool solved = false;
+	int CheckedStates = 0;
 	//loop looks like this: expand points, sort them in order of distance to goal(witth heuristic)
 	do
 	{
 
-		
+		CheckedStates++;
 			Point* tmp = ToExpand->back();
 			//Expanded.push_back(tmp->ID);
 			ToExpand->pop_back();//remember to ad destruction
 			mapSearch->Expand( &(tmp->ID),tmp);
 			if (ToExpand->size() != 0) {
-			if ((*ToExpand)[0]->EstimatedDistanceToGoal == 0)
+			if ((*ToExpand)[0]->EstimatedCostToGoal == 0)
 			{
 				solved = true;
 				break;
@@ -132,8 +135,8 @@ int FindPath(const int nStartX, const int nStartY,
 				sort(ToExpand->begin(), ToExpand->end(),
 					[](const Point* a, const Point* b) //I could hide it or I could just admit that I took it from stack overflow 
 													   //I should think more about lambda expressions, I also edited it to use pointers to my class and whatnot
-				{
-					return (a->EstimatedDistanceToGoal > b->EstimatedDistanceToGoal);//!!!!!!check if < shouldn't be other way
+				{										//But creating my own sort could be much better if I would make a secondary statement that would look at movestillhere
+					return (a->EstimatedCostToGoal > b->EstimatedCostToGoal);
 				});
 			}
 
@@ -148,13 +151,17 @@ int FindPath(const int nStartX, const int nStartY,
 
 
 	} while (true);
+	cout << CheckedStates << endl;
 	//fill the Buffer 
 	//would be good to make temporary buffer fills to ensure that the game doesn't lag
+	
 	if (solved) {
 		for (int i = 0; i < (*ToExpand)[0]->moveListTillHere.size(); i++)
 		{
 			pOutBuffer[i] = (*ToExpand)[0]->moveListTillHere[i];
+			cout << pOutBuffer[i]<<" ";
 		}
+		cout << endl;
 		return   (*ToExpand)[0]->movesTillHere;
 	}
 	else

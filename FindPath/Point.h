@@ -6,7 +6,7 @@ class Point
 public:
 	vector<int> moveListTillHere;
 	int prevPos;	
-	int EstimatedDistanceToGoal; //mahatan heuristic
+	int EstimatedCostToGoal; //mahatan heuristic
 	int movesTillHere;
 	int ID;
 	Point();
