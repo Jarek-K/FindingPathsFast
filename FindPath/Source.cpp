@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include "FinderHeader.h"
-#include <vld.h>
+//#include <vld.h>  // memory leak thingy I used
 using namespace std;
 int main()
 {
