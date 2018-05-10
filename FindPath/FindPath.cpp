@@ -7,6 +7,9 @@ MapSearch::MapSearch() {
 
 
 }
+MapSearch::~MapSearch() {
+
+}
 MapSearch::MapSearch(const int mapWidtht, const int mapHeightt, vector<int>* mapt, vector<Point*>* toExpandt, int goalIDt)
 {
 	goalID = goalIDt;
@@ -29,8 +32,9 @@ void MapSearch::Expand(int * id, Point * Expand)
 
 	if ( *id - 1 != Expand->prevPos &&
 		(*id )%mapWidth != 0 &&
-		(*map)[*id - 1] == 1  &&
-		find_if(toExpand->begin(), toExpand->end(), [id](const Point * Pnt) {return Pnt->ID == *id - 1; }) == toExpand->end())
+		(*map)[*id - 1] == 1  
+	&&	find_if(toExpand->begin(), toExpand->end(), [id](const Point * Pnt) {return Pnt->ID == *id - 1; }) == toExpand->end()
+		)
 		{
 		
 			Point * p = new Point( Expand->moveListTillHere,Expand->movesTillHere, *id - 1,*id);
@@ -41,8 +45,9 @@ void MapSearch::Expand(int * id, Point * Expand)
 		if (
 			*id + 1 != Expand->prevPos && 
 			((*id+1) % (mapWidth)!=0 ||*id == 0)&& 
-			(*map)[*id + 1] == 1 && 
-			find_if(toExpand->begin(), toExpand->end(), [id](const Point * Pnt) {return Pnt->ID == *id + 1; }) == toExpand->end())
+			(*map)[*id + 1] == 1 
+		&&	find_if(toExpand->begin(), toExpand->end(), [id](const Point * Pnt) {return Pnt->ID == *id + 1; }) == toExpand->end()
+			)
 		{
 			Point * p = new Point(Expand->moveListTillHere, Expand->movesTillHere, *id + 1,*id);
 			CalculateCost(p);
@@ -51,8 +56,9 @@ void MapSearch::Expand(int * id, Point * Expand)
 		int k = mapWidth;
 		if (*id + mapWidth != Expand->prevPos && 
 			*id  < (mapHeight*mapWidth-mapWidth) &&
-			(*map)[*id + mapWidth] == 1 && 
-			find_if(toExpand->begin(), toExpand->end(), [id,k](const Point * Pnt) {return Pnt->ID == *id + k; }) == toExpand->end())
+			(*map)[*id + mapWidth] == 1 
+			&& find_if(toExpand->begin(), toExpand->end(), [id,k](const Point * Pnt) {return Pnt->ID == *id + k; }) == toExpand->end()
+			)
 		{
 			Point * p = new 	Point(Expand->moveListTillHere, Expand->movesTillHere, *id + mapWidth,*id);
 			CalculateCost(p);
@@ -61,8 +67,9 @@ void MapSearch::Expand(int * id, Point * Expand)
 
 		if (*id - mapWidth != Expand->prevPos &&
 			*id  >=mapWidth && 
-			(*map)[*id - mapWidth] == 1 && 
-			find_if(toExpand->begin(), toExpand->end(), [id,k](const Point * Pnt) {return Pnt->ID == *id - k; }) == toExpand->end())
+			(*map)[*id - mapWidth] == 1 
+		&&	find_if(toExpand->begin(), toExpand->end(), [id,k](const Point * Pnt) {return Pnt->ID == *id - k; }) == toExpand->end()
+			)
 		{
 			Point * p = new 	Point(Expand->moveListTillHere, Expand->movesTillHere, *id - mapWidth,*id);
 			CalculateCost(p);
@@ -79,10 +86,11 @@ void MapSearch::CalculateCost( Point * p)
 	//later this quantity is used to sort elements to be expanded
 	if (p->ID != goalID)
 	p->EstimatedCostToGoal = p->movesTillHere+
-		1.1*(abs((p->ID-((p->ID)/mapWidth)*mapWidth)- (goalID - (goalID / mapWidth)*mapWidth))+
+		(abs((p->ID-((p->ID)/mapWidth)*mapWidth)- (goalID - (goalID / mapWidth)*mapWidth))+  //add 1.1 before parenthesis for increased performance but not guaranteed perfect solution
 		abs((p->ID / mapWidth)- (goalID / mapWidth)));
 	else {
 		p->EstimatedCostToGoal = 0;
+		delete (*toExpand)[0];
 		(*toExpand)[0] = p;
 	}
 	
@@ -96,6 +104,8 @@ int FindPath(const int nStartX, const int nStartY,
 {
 	//make map real 
 	vector<int>* map = new vector<int>() ; // Probably should've stayed with chars for map, but  for some reason int's look nicer to me, but than again memory is waisted
+	
+
 	
 	for (int i = 0; i < nMapWidth*nMapHeight; i++)
 	{
@@ -116,7 +126,10 @@ int FindPath(const int nStartX, const int nStartY,
 	
 	bool solved = false;
 	int CheckedStates = 0;
+
+	
 	//loop looks like this: expand points, sort them in order of distance to goal(witth heuristic)
+	
 	do
 	{
 
@@ -124,7 +137,9 @@ int FindPath(const int nStartX, const int nStartY,
 			Point* tmp = ToExpand->back();
 			//Expanded.push_back(tmp->ID);
 			ToExpand->pop_back();//remember to ad destruction
+			//delete (*ToExpand)[ToExpand->size()-1];
 			mapSearch->Expand( &(tmp->ID),tmp);
+			delete tmp;
 			if (ToExpand->size() != 0) {
 			if ((*ToExpand)[0]->EstimatedCostToGoal == 0)
 			{
@@ -135,8 +150,13 @@ int FindPath(const int nStartX, const int nStartY,
 				sort(ToExpand->begin(), ToExpand->end(),
 					[](const Point* a, const Point* b) //I could hide it or I could just admit that I took it from stack overflow 
 													   //I should think more about lambda expressions, I also edited it to use pointers to my class and whatnot
-				{										//But creating my own sort could be much better if I would make a secondary statement that would look at movestillhere
-					return (a->EstimatedCostToGoal > b->EstimatedCostToGoal);
+				{										//I also added the 2nd expresion so that when estimated cost is equal lower moves value has a prefrence
+					if (a->EstimatedCostToGoal != b->EstimatedCostToGoal)
+					return (
+						a->EstimatedCostToGoal > b->EstimatedCostToGoal
+					
+					);
+					return(a->movesTillHere > b->movesTillHere);
 				});
 			}
 
@@ -148,9 +168,11 @@ int FindPath(const int nStartX, const int nStartY,
 			break;
 
 		}
-
+	
 
 	} while (true);
+
+	solved = true;
 	cout << CheckedStates << endl;
 	//fill the Buffer 
 	//would be good to make temporary buffer fills to ensure that the game doesn't lag
@@ -159,14 +181,36 @@ int FindPath(const int nStartX, const int nStartY,
 		for (int i = 0; i < (*ToExpand)[0]->moveListTillHere.size(); i++)
 		{
 			pOutBuffer[i] = (*ToExpand)[0]->moveListTillHere[i];
-			cout << pOutBuffer[i]<<" ";
+			cout << pOutBuffer[i] << " ";
 		}
 		cout << endl;
-		return   (*ToExpand)[0]->movesTillHere;
+		int a = (*ToExpand)[0]->movesTillHere;
+	
+		for (int k = ToExpand->size()-1; k > 0; k--){
+			//ToExpand->pop_back();
+			
+			delete (*ToExpand)[k ];
+	}
+		
+	delete mapSearch;
+
+	delete ToExpand;
+	
+	
+	delete map;
+		return   a;
 	}
 	else
 	{
+		for (int k = ToExpand->size(); k > 1; k--) {
+			//ToExpand->pop_back();
 
+			delete (*ToExpand)[k - 1];
+		}
+
+	delete mapSearch;
+	delete ToExpand;
+	delete map;
 		return -1;
 	}
 

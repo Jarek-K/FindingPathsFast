@@ -10,6 +10,7 @@ public:
 	int movesTillHere;
 	int ID;
 	Point();
+	
 	Point(int id);
 	Point(vector<int> moveList,  int cTH,int id,int prevPost);
 	

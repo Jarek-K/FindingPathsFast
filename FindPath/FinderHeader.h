@@ -16,6 +16,7 @@ private:
 	
 
 	MapSearch();
+	~MapSearch();
 	MapSearch(const int  mapWidtht, const int mapHeightt, vector<int>* mapt, vector<Point*>* toExpandt, int goalIDt );
 
 	
