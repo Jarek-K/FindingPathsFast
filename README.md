@@ -1,10 +1,10 @@
 # FindingPathsFast
 Search using A* in c++ 11
 
---1.01--
--added unix version FindPath_unix (works on linux, with g++ and valgrind)
--checked for memory leaks with valgrind 
---
+1.01
+*added unix version FindPath_unix (works on linux, with g++ and valgrind)
+*checked for memory leaks with valgrind 
+
 
 Create Point-> Expand point-> check if solved-> repeat
 
