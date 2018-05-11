@@ -1,5 +1,5 @@
 # FindingPathsFast
-Search using A*
+Search using A* in c++ 11
 
 --1.01--
 -added unix version FindPath_unix (works on linux, with g++ and valgrind)
