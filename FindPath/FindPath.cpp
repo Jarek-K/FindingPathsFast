@@ -20,16 +20,17 @@ according to my time tracker it took my 8h to make this. Is this way to much? In
 */
 
 
-
-#include "FinderHeader.h"
+#include <chrono>
+#include "FindPath.h"
 #include <algorithm>
 #include <iostream>
 using namespace std;
+
 MapSearch::MapSearch() {
 }
 MapSearch::~MapSearch() {
 }
-MapSearch::MapSearch(const int mapWidtht, const int mapHeightt, vector<int>* mapt, vector<Point*>* toExpandt, int goalIDt)
+MapSearch::MapSearch(const int mapWidtht, const int mapHeightt, vector<char>* mapt, vector<Point*>* toExpandt, int goalIDt)
 {
 	goalID = goalIDt;
 	mapWidth = mapWidtht;
@@ -47,13 +48,13 @@ void MapSearch::Expand(int * id, Point * Expand, vector<int>* Expanded)
 	 //4 did I already expanded there (1 only check last move)
 	if (*id - 1 != Expand->prevPos &&
 		(*id) % mapWidth != 0 &&
-		(*map)[*id - 1] == 1
+		(*map)[*id - 1] == '\x1'
 		&& find_if(toExpand->begin(), toExpand->end(), [id](const Point * Pnt) {return Pnt->ID == *id - 1; }) == toExpand->end()
 		&& find(Expanded->begin(),Expanded->end(), *id - 1)==Expanded->end()
 		)
 	{
 
-		Point * p = new Point(Expand->moveListTillHere, Expand->movesTillHere, *id - 1, *id);
+		Point * p = new Point(Expand->moveListTillHere, Expand->movesTillHere, *id - 1);
 		CalculateCost(p);
 		toExpand->push_back(p);
 	}
@@ -61,36 +62,36 @@ void MapSearch::Expand(int * id, Point * Expand, vector<int>* Expanded)
 	if (
 		*id + 1 != Expand->prevPos &&
 		((*id + 1) % (mapWidth) != 0 || *id == 0) &&
-		(*map)[*id + 1] == 1
+		(*map)[*id + 1] == '\x1'
 		&& find_if(toExpand->begin(), toExpand->end(), [id](const Point * Pnt) {return Pnt->ID == *id + 1; }) == toExpand->end()
 		&& find(Expanded->begin(), Expanded->end(), *id + 1) == Expanded->end()
 		)
 	{
-		Point * p = new Point(Expand->moveListTillHere, Expand->movesTillHere, *id + 1, *id);
+		Point * p = new Point(Expand->moveListTillHere, Expand->movesTillHere, *id + 1);
 		CalculateCost(p);
 		toExpand->push_back(p);
 	}
 	int k = mapWidth;
 	if (*id + mapWidth != Expand->prevPos &&
 		*id < (mapHeight*mapWidth - mapWidth) &&
-		(*map)[*id + mapWidth] == 1
+		(*map)[*id + mapWidth] == '\x1'
 		&& find_if(toExpand->begin(), toExpand->end(), [id, k](const Point * Pnt) {return Pnt->ID == *id + k; }) == toExpand->end()
 		&& find(Expanded->begin(), Expanded->end(), *id +k) == Expanded->end()
 		)
 	{
-		Point * p = new 	Point(Expand->moveListTillHere, Expand->movesTillHere, *id + mapWidth, *id);
+		Point * p = new 	Point(Expand->moveListTillHere, Expand->movesTillHere, *id + mapWidth);
 		CalculateCost(p);
 		toExpand->push_back(p);
 	}
 
 	if (*id - mapWidth != Expand->prevPos &&
 		*id >= mapWidth &&
-		(*map)[*id - mapWidth] == 1
+		(*map)[*id - mapWidth] == '\x1'
 		&& find_if(toExpand->begin(), toExpand->end(), [id, k](const Point * Pnt) {return Pnt->ID == *id - k; }) == toExpand->end()
 		&& find(Expanded->begin(), Expanded->end(), *id +k) == Expanded->end()
 		)
 	{
-		Point * p = new 	Point(Expand->moveListTillHere, Expand->movesTillHere, *id - mapWidth, *id);
+		Point * p = new	Point(Expand->moveListTillHere, Expand->movesTillHere, *id - mapWidth);
 		CalculateCost(p);
 		toExpand->push_back(p);
 	}
@@ -104,10 +105,11 @@ void MapSearch::CalculateCost(Point * p)
 	//but basicly I'm just adding manhatan distance to amount of moves from start, so a*. I should also add some prefrence for distance 
 	//but I wanted estimated distance to be an int, and alsow I want perfect solution every time
 	//later this quantity is used to sort elements to be expanded
-	if (p->ID != goalID)
+	if (p->ID != goalID) {
 		p->EstimatedCostToGoal = p->movesTillHere +
-		(abs((p->ID - ((p->ID) / mapWidth)*mapWidth) - (goalID - (goalID / mapWidth)*mapWidth)) +  //add 1.1 before parenthesis for increased performance but not guaranteed perfect solution
-			abs((p->ID / mapWidth) - (goalID / mapWidth)));
+			(abs((p->ID - ((p->ID) / mapWidth)*mapWidth) - (goalID - (goalID / mapWidth)*mapWidth)) +  //add 1.1 before parenthesis for increased performance but not guaranteed perfect solution
+				abs((p->ID / mapWidth) - (goalID / mapWidth)));
+	}
 	else {
 		p->EstimatedCostToGoal = 0;
 		delete (*toExpand)[0];
@@ -123,17 +125,18 @@ int FindPath(const int nStartX, const int nStartY,
 	int* pOutBuffer, const int nOutBufferSize)
 {
 	//make map real 
-	vector<int>* map = new vector<int>(); // Probably should've stayed with chars for map, but  for some reason int's look nicer to me, but than again memory is waisted
+	vector<char>* map = new vector<char>();
+	map->reserve(nMapWidth*nMapHeight);
 	for (int i = 0; i < nMapWidth*nMapHeight; i++) //populating my map
 	{
-		unsigned char p = '\x1';
-
-		if (*(pMap + i) == p)
+		//unsigned char p = '\x1';
+		map->push_back(*(pMap + i));
+		/*if (*(pMap + i) == '\x1')
 			map->push_back(1);
 		else
 		{
 			map->push_back(0);
-		}
+		}*/
 
 	}
 	vector <int> Expanded;
@@ -144,8 +147,9 @@ int FindPath(const int nStartX, const int nStartY,
 	bool solved = false;
 	int CheckedStates = 0;
 
-
+	auto start = chrono::high_resolution_clock::now();
 	//loop looks like this: expand points, sort them in order of distance to goal(witth heuristic)
+
 	do
 	{
 		
@@ -158,7 +162,7 @@ int FindPath(const int nStartX, const int nStartY,
 
 		CheckedStates++;
 		Point* tmp = ToExpand->back(); // I'm using tmp because I'm going to add elements to toexpand later, andthen I wouldn't be able to pop back this element
-		ToExpand->pop_back();//remember to ad destruction
+		ToExpand->pop_back();
 		mapSearch->Expand(&(tmp->ID), tmp, &Expanded); // expanding point, basically creating point objects in viable locations around selected point object
 		Expanded.push_back(tmp->ID);
 		delete tmp;
@@ -193,8 +197,10 @@ int FindPath(const int nStartX, const int nStartY,
 
 
 	} while (true);
-	
-	//cout << CheckedStates << endl; //display amount of checked states for diagnostics
+	auto end = chrono::high_resolution_clock::now();
+	chrono::duration<float> duration = end - start;
+	cout << "Time to find Path clean: " << duration.count() << endl; //baseline 0.007-8
+	cout << CheckedStates << endl; //display amount of checked states for diagnostics
 	//fill the Buffer 
 	//would be good to make temporary buffer fills to ensure that the game doesn't lag
 

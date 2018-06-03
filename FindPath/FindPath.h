@@ -4,25 +4,25 @@
 #include <vector>
 # include "Point.h"
 
-using namespace std;
+
 class MapSearch
 {
 private:
 	int mapWidth;
 	int mapHeight;
 	int goalID;
-	vector<int>* map;
-	vector<Point*>* toExpand;
+	std::vector<char>* map;
+	std::vector<Point*>* toExpand;
 	//vector<int>* Expanded;
 public:
 
 
 	MapSearch();
 	~MapSearch();
-	MapSearch(const int  mapWidtht, const int mapHeightt, vector<int>* mapt, vector<Point*>* toExpandt, int goalIDt);
+	MapSearch(const int  mapWidtht, const int mapHeightt, std::vector<char>* mapt, std::vector<Point*>* toExpandt, int goalIDt);
 
 
-	void Expand(int * id, Point * Expand, vector<int>* Expanded);
+	void Expand(int * id, Point * Expand, std::vector<int>* Expanded);
 	void CalculateCost(Point * p);
 
 };

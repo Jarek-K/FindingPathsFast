@@ -1,11 +1,11 @@
 
 #include <vector>
 
-using namespace std;
+
 class Point
 {
 public:
-	vector<int> moveListTillHere;
+	std::vector<int> moveListTillHere;
 	int prevPos;
 	int EstimatedCostToGoal; //mahatan heuristic
 	int movesTillHere;
@@ -13,7 +13,7 @@ public:
 	Point();
 
 	Point(int id);
-	Point(vector<int> moveList, int cTH, int id, int prevPost);
+	Point(std::vector<int> moveList, int cTH, int id);
 
 
 
