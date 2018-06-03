@@ -39,61 +39,94 @@ MapSearch::MapSearch(const int mapWidtht, const int mapHeightt, vector<char>* ma
 	toExpand = toExpandt;
 
 }
+void MapSearch::Insert(Point * pnt)
+{
+	//toExpand->push_back(pnt);
+
+	toExpand->insert(find_if(toExpand->begin(), toExpand->end(), [pnt](const Point * Tpnt) {
+		if (Tpnt->EstimatedCostToGoal < pnt->EstimatedCostToGoal)
+			return true;
+		else if ((Tpnt->EstimatedCostToGoal == pnt->EstimatedCostToGoal))
+			return (Tpnt->movesTillHere < pnt->movesTillHere);
+		else return false;
+	}),pnt);
+
+
+	//for (vector<Point*>::iterator it = toExpand->begin(); it < toExpand->end(); i++)
+	//{
+	//	*it
+	////	if(*it.>2)
+
+	//	/*	if (a->EstimatedCostToGoal != b->EstimatedCostToGoal)
+	//			return (
+	//				a->EstimatedCostToGoal > b->EstimatedCostToGoal
+	//				);
+	//	return(a->movesTillHere > b->movesTillHere);*/
+	//}
+}
+
 void MapSearch::Expand(int * id, Point * Expand, vector<int>* Expanded)
 {	//This could've been done more neatly for sure
-	 //I'm checking for things in a row
+	 //I'm checking 4 things in a row
 	 // first: am I expanding straight back to point where I came from(removin 25% of choice)
 	 // 2 am I going to be out of bounds
 	 //3 can I go there
-	 //4 did I already expanded there (1 only check last move)
+	 //4 did I already expanded there 
 	if (*id - 1 != Expand->prevPos &&
 		(*id) % mapWidth != 0 &&
 		(*map)[*id - 1] == '\x1'
-		&& find_if(toExpand->begin(), toExpand->end(), [id](const Point * Pnt) {return Pnt->ID == *id - 1; }) == toExpand->end()
-		&& find(Expanded->begin(),Expanded->end(), *id - 1)==Expanded->end()
+		&& (*Expanded)[(*id - 1)] == 0
+
 		)
 	{
-
+		(*Expanded)[(*id - 1)] = 2;
 		Point * p = new Point(Expand->moveListTillHere, Expand->movesTillHere, *id - 1);
 		CalculateCost(p);
-		toExpand->push_back(p);
+		Insert(p);
+		
 	}
 
 	if (
 		*id + 1 != Expand->prevPos &&
 		((*id + 1) % (mapWidth) != 0 || *id == 0) &&
 		(*map)[*id + 1] == '\x1'
-		&& find_if(toExpand->begin(), toExpand->end(), [id](const Point * Pnt) {return Pnt->ID == *id + 1; }) == toExpand->end()
-		&& find(Expanded->begin(), Expanded->end(), *id + 1) == Expanded->end()
+		&& (*Expanded)[*id + 1] == 0
+
 		)
 	{
+		(*Expanded)[(*id + 1)] = 2;
 		Point * p = new Point(Expand->moveListTillHere, Expand->movesTillHere, *id + 1);
 		CalculateCost(p);
-		toExpand->push_back(p);
+		Insert(p);
+	
 	}
 	int k = mapWidth;
 	if (*id + mapWidth != Expand->prevPos &&
 		*id < (mapHeight*mapWidth - mapWidth) &&
 		(*map)[*id + mapWidth] == '\x1'
-		&& find_if(toExpand->begin(), toExpand->end(), [id, k](const Point * Pnt) {return Pnt->ID == *id + k; }) == toExpand->end()
-		&& find(Expanded->begin(), Expanded->end(), *id +k) == Expanded->end()
+		&& (*Expanded)[*id + k] == 0
+
 		)
 	{
+		(*Expanded)[(*id+ k)] = 2;
 		Point * p = new 	Point(Expand->moveListTillHere, Expand->movesTillHere, *id + mapWidth);
 		CalculateCost(p);
-		toExpand->push_back(p);
+		Insert(p);
+		
 	}
 
 	if (*id - mapWidth != Expand->prevPos &&
 		*id >= mapWidth &&
 		(*map)[*id - mapWidth] == '\x1'
-		&& find_if(toExpand->begin(), toExpand->end(), [id, k](const Point * Pnt) {return Pnt->ID == *id - k; }) == toExpand->end()
-		&& find(Expanded->begin(), Expanded->end(), *id +k) == Expanded->end()
+		&& (*Expanded)[*id - k] == 0
+
 		)
 	{
+		(*Expanded)[(*id -k)] = 2;
 		Point * p = new	Point(Expand->moveListTillHere, Expand->movesTillHere, *id - mapWidth);
 		CalculateCost(p);
-		toExpand->push_back(p);
+		Insert(p);
+
 	}
 
 }
@@ -107,13 +140,14 @@ void MapSearch::CalculateCost(Point * p)
 	//later this quantity is used to sort elements to be expanded
 	if (p->ID != goalID) {
 		p->EstimatedCostToGoal = p->movesTillHere +
-			(abs((p->ID - ((p->ID) / mapWidth)*mapWidth) - (goalID - (goalID / mapWidth)*mapWidth)) +  //add 1.1 before parenthesis for increased performance but not guaranteed perfect solution
-				abs((p->ID / mapWidth) - (goalID / mapWidth)));
+			(abs(p->ID / mapWidth - goalID / mapWidth) + abs(p->ID%mapWidth - goalID % mapWidth)); //add 1.1 before parenthesis for increased performance but not guaranteed perfect solution
+		
+		
 	}
 	else {
+		cout << "end";
 		p->EstimatedCostToGoal = 0;
-		delete (*toExpand)[0];
-		(*toExpand)[0] = p;
+
 	}
 
 	// check if not goal
@@ -129,18 +163,13 @@ int FindPath(const int nStartX, const int nStartY,
 	map->reserve(nMapWidth*nMapHeight);
 	for (int i = 0; i < nMapWidth*nMapHeight; i++) //populating my map
 	{
-		//unsigned char p = '\x1';
 		map->push_back(*(pMap + i));
-		/*if (*(pMap + i) == '\x1')
-			map->push_back(1);
-		else
-		{
-			map->push_back(0);
-		}*/
-
 	}
-	vector <int> Expanded;
+	vector <int> Expanded(nMapWidth*nMapHeight);
+	//Expanded.reserve(nMapWidth*nMapHeight);
+	
 	vector<Point*> * ToExpand = new vector<Point*>();
+	ToExpand->reserve(0.1*nMapWidth*nMapHeight);
 	MapSearch * mapSearch = new MapSearch(nMapWidth, nMapHeight, map, ToExpand, nTargetX + nTargetY * nMapWidth);
 	ToExpand->push_back(new Point(nStartX + nMapWidth * nStartY));
 
@@ -149,7 +178,8 @@ int FindPath(const int nStartX, const int nStartY,
 
 	auto start = chrono::high_resolution_clock::now();
 	//loop looks like this: expand points, sort them in order of distance to goal(witth heuristic)
-
+	chrono::duration<float> duration2;
+	float Time = 0;
 	do
 	{
 		
@@ -163,56 +193,54 @@ int FindPath(const int nStartX, const int nStartY,
 		CheckedStates++;
 		Point* tmp = ToExpand->back(); // I'm using tmp because I'm going to add elements to toexpand later, andthen I wouldn't be able to pop back this element
 		ToExpand->pop_back();
+		auto start2 = chrono::high_resolution_clock::now();
 		mapSearch->Expand(&(tmp->ID), tmp, &Expanded); // expanding point, basically creating point objects in viable locations around selected point object
-		Expanded.push_back(tmp->ID);
+		auto end2 = chrono::high_resolution_clock::now();
+		Expanded[tmp->ID] = 1;
+		//Expanded.push_back(tmp->ID);
 		delete tmp;
-		if (ToExpand->size() != 0) {
-			if ((*ToExpand)[0]->EstimatedCostToGoal == 0) // I'm checking at 0 because during expansion when solution is detected it's pushed to 0
+		
+	
+			if (ToExpand->back()->EstimatedCostToGoal == 0) 
 			{
 				solved = true;
 				break;
 			}
-			if (ToExpand->size() > 1) //don't want to sort 1 element
-			{ 
-				sort(ToExpand->begin(), ToExpand->end(),
-					[](const Point* a, const Point* b) //I could hide it but let's be fair I got idea of using lambdas in sort from stack overflow 
-													   // I also edited it to use pointers to my class and whatnot
-				{										//and I added the 2nd expresion so that when estimated cost is equal, lower moves value has a prefrence
-					if (a->EstimatedCostToGoal != b->EstimatedCostToGoal)
-						return (
-							a->EstimatedCostToGoal > b->EstimatedCostToGoal
-							);
-					return(a->movesTillHere > b->movesTillHere);
-				});
-			}
+
+				//sort(ToExpand->begin(), ToExpand->end(),
+				//	[](const Point* a, const Point* b) //I could hide it but let's be fair I got idea of using lambdas in sort from stack overflow 
+				//									   // I also edited it to use pointers to my class and whatnot
+				//{										//and I added the 2nd expresion so that when estimated cost is equal, lower moves value has a prefrence
+				//	if (a->EstimatedCostToGoal != b->EstimatedCostToGoal)
+				//		return (
+				//			a->EstimatedCostToGoal > b->EstimatedCostToGoal
+				//			);
+				//	return(a->movesTillHere > b->movesTillHere);
+				//});
+				
+			 duration2 =  (end2 - start2);
+			 Time += duration2.count();
 
 
-		}
-		else
-		{ // no solution found
 
-			break;
-
-		}
-
-
-	} while (true);
+	} while (ToExpand->size() != 0);
 	auto end = chrono::high_resolution_clock::now();
 	chrono::duration<float> duration = end - start;
 	cout << "Time to find Path clean: " << duration.count() << endl; //baseline 0.007-8
+	cout << "Time to sort: " << Time << endl; //baseline 0.007-8
 	cout << CheckedStates << endl; //display amount of checked states for diagnostics
 	//fill the Buffer 
 	//would be good to make temporary buffer fills to ensure that the game doesn't lag
 
 	Expanded.clear();
 	if (solved) {
-		for (unsigned int i = 0; i < (*ToExpand)[0]->moveListTillHere.size(); i++)
+		for (unsigned int i = 0; i < ToExpand->back()->moveListTillHere.size(); i++)
 		{
-			pOutBuffer[i] = (*ToExpand)[0]->moveListTillHere[i];
+			pOutBuffer[i] = ToExpand->back()->moveListTillHere[i];
 			//cout << pOutBuffer[i] << " ";  //display buffer to check if everything is ok
 		}
 
-		int a = (*ToExpand)[0]->movesTillHere;
+		int a = ToExpand->back()->movesTillHere;
 
 		for (int k = ToExpand->size() - 1; k > 0; k--) {
 			delete (*ToExpand)[k];

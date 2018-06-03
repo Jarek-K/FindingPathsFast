@@ -119,17 +119,39 @@ int main()
 		1,1,1,1,0,0,0,0,0,0 ,
 		1,1,1,1,1,1,1,1,1,1
 	};
-	const int bufferSize = 500;
+//unsigned char pmap[10000];
+//for (int i = 0; i < 10000; i++)
+//	pmap[i] = 1;
+const int bufferSize = 300;
 	int poutbuffer[bufferSize];
 
 	auto start = chrono::high_resolution_clock::now();	
-	int lPath = FindPath(0, 0, 9, 99, pmap, 10, 100, poutbuffer, bufferSize);
+	int lPath = FindPath(0, 0, 0, 99, pmap, 10, 100, poutbuffer, bufferSize);
 	auto end = chrono::high_resolution_clock::now();
 	chrono::duration<float> duration = end - start;
-
+	for (int z = 0; z < 100 ; z++)
+	{
+		for (int x = 0; x < 10; x++) {
+			bool p = false;
+			for (int i : poutbuffer)
+			{
+				
+				if (10 * z + x == i) {
+					cout << "P ";
+						p = true;
+				}
+			}
+			if (!p) {
+				if(pmap[10 * z + x] == '\x1')
+				cout << "_ ";//*(pmap + z);
+				else
+					cout << "^ ";
+			}
+		}
+			cout << endl;
+	}
 	cout << "Moves num: " << lPath << endl;
 	cout <<"Time to find Path: " <<duration.count() << endl; //baseline 0.09-0.1 0.007-8
 	cin.get();
 
 }
-

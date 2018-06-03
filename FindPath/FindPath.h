@@ -20,7 +20,7 @@ public:
 	MapSearch();
 	~MapSearch();
 	MapSearch(const int  mapWidtht, const int mapHeightt, std::vector<char>* mapt, std::vector<Point*>* toExpandt, int goalIDt);
-
+	void Insert(Point* pnt);
 
 	void Expand(int * id, Point * Expand, std::vector<int>* Expanded);
 	void CalculateCost(Point * p);
