@@ -15,7 +15,7 @@ It is possible to easily add some additional features such as different terains,
 MapSearch is created so that points don't have to contain too much information.
 
 I'm using Manhatan instead of eucelidan because it's not allowed to move diagonally, so path length should be the same
-I checked for memory leaks with visual leak detector for vs, it seems to work fine. I wasn't able to use valgrind cause I made this in visual c++ and for some reason g++ cannot read it.
+There aren't any memory leaks.
 In general performance is decent, but still not good enough for real time, on my laptop 100x100 map with worst case calculates 0.5s. there are some improvements if close to shortes path is ok that give 10x performance boost in some cases.
 Addidng multithreading could make it couple times faster, but I haven't really considered it at the beggining, and now it's a bit difficult to fit it to this solution.
 
