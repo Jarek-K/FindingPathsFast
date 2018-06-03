@@ -9,29 +9,30 @@ using namespace std;
 int main()
 {
 
-unsigned char pmap[10000];
-//map generation
-for (int i = 0; i < 10000; i++) {
-
-	if (i/100>45 &&i/100<65) {
-		if (i % 7 == 5)
-			pmap[i] = 0;
-	else if ((i / 100) % 9 == 2 && i % 100 < 76)
-		pmap[i] = 0;
-	else if ((i / 100) % 9 == 7 && i % 100 > 23)
-		pmap[i] = 0;
-	else
-		pmap[i] = 1;
-}
+	unsigned char pmap[10000];
+	//map generation
+	
+	for (int i = 0; i < 10000; i++) {
+	
+		if (i / 100 > 45 && i / 100 < 65) {
+			if (i % 7 == 5)
+				pmap[i] = 0;
+			else if ((i / 100) % 9 == 2 && i % 100 < 76)
+				pmap[i] = 0;
+			else if ((i / 100) % 9 == 7 && i % 100 > 23)
+				pmap[i] = 0;
+			else
+				pmap[i] = 1;
+		}
 		else
-		pmap[i] = 1;
-}
+			pmap[i] = 1;
+	}
 
-const int bufferSize = 500;
+	const int bufferSize = 500;
 	int poutbuffer[bufferSize];
 	const int dimx = 100;
 	const int dimy = 100;
-	auto start = chrono::high_resolution_clock::now();	
+	auto start = chrono::high_resolution_clock::now();
 	int lPath = FindPath(0, 0, 99, 99, pmap, dimx, dimy, poutbuffer, bufferSize);
 	auto end = chrono::high_resolution_clock::now();
 	chrono::duration<float> duration = end - start;
@@ -62,11 +63,13 @@ const int bufferSize = 500;
 		}
 		cout << endl;
 	}
+
 	cout << "Moves num: " << lPath << endl;
-	cout <<"Time to find Path: " <<duration.count() << endl; 
+	cout << "Time to find Path: " << duration.count() << endl;
 	cin.get();
 
 }
 
 
-	
+
+
