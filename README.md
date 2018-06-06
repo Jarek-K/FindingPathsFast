@@ -1,8 +1,8 @@
 # FindingPathsFast
 Search using A* in c++ 11 in visual studio
 
-1.02
-now 10x faster with the same results, also added map generation, and console map drawing with path
+1.03
+a lot faster, and using less memory
 
 Search using A*
 

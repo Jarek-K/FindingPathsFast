@@ -169,8 +169,8 @@ int FindPath(const int nStartX, const int nStartY,
 	ToExpand->reserve(nMapWidth*nMapHeight);
 	vector<Point*> Garbage;
 	Garbage.reserve(nMapWidth*nMapHeight);
-	MapSearch * mapSearch = new MapSearch(nMapWidth, nMapHeight, map, ToExpand, nStartX + nMapWidth * nStartY);
-	ToExpand->push_back(new Point(nTargetX + nTargetY * nMapWidth));
+	MapSearch * mapSearch = new MapSearch(nMapWidth, nMapHeight, map, ToExpand, nTargetX + nTargetY * nMapWidth );
+	ToExpand->push_back(new Point(nStartX + nMapWidth * nStartY));
 
 	bool solved = false;
 	int CheckedStates = 0;
@@ -223,17 +223,17 @@ int FindPath(const int nStartX, const int nStartY,
 	if (solved) {
 		//fill the Buffer 
 		//would be good to make temporary buffer fills to ensure that the game doesn't lag
-		Point* tmp = ToExpand->back()->prev;
-		for (unsigned int i = ToExpand->back()->movesTillHere; i > 0; i--)
+		Point* tmp = ToExpand->back();
+		for (unsigned int i = ToExpand->back()->movesTillHere-1; i > 0; i--)
 		{
 		
-			*(pOutBuffer+ToExpand->back()->movesTillHere - i) = tmp->ID;
+			*(pOutBuffer+i) = tmp->ID;
 			
 			tmp = tmp->prev;
 			
 
 		}
-
+		*(pOutBuffer) = tmp->ID;
 		int a = ToExpand->back()->movesTillHere;
 
 		for (int k = ToExpand->size() - 1; k >= 0; k--) {
