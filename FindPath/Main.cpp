@@ -29,7 +29,7 @@ int main()
 	}
 
 
-	const int bufferSize = 50;
+	const int bufferSize = 500;
 	int poutbuffer[bufferSize];
 	const int dimx = 100;
 	const int dimy = 100;

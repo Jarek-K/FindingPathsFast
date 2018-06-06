@@ -147,6 +147,7 @@ int FindPath(const int nStartX, const int nStartY,
 {
 	
 	
+	
 
 	// map a vector 
 	vector<char>* map = new vector<char>();
@@ -198,8 +199,8 @@ int FindPath(const int nStartX, const int nStartY,
 			delete map;
 			
 			const int bufSize2 =nOutBufferSize*2;
-			int* poutbuffer = new int[bufSize2];
-			pOutBuffer = poutbuffer;
+			//int* poutbuffer = new int[bufSize2];
+			*pOutBuffer = *new int[bufSize2];
 			
 			return  FindPath(nStartX, nStartY, nTargetX, nTargetY, pMap, nMapWidth, nMapHeight, pOutBuffer, bufSize2);
 		
@@ -226,7 +227,7 @@ int FindPath(const int nStartX, const int nStartY,
 		for (unsigned int i = ToExpand->back()->movesTillHere; i > 0; i--)
 		{
 		
-			pOutBuffer[ToExpand->back()->movesTillHere - i] = tmp->ID;
+			*(pOutBuffer+ToExpand->back()->movesTillHere - i) = tmp->ID;
 			
 			tmp = tmp->prev;
 			
