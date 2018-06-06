@@ -16,7 +16,7 @@ MapSearch is created so that points don't have to contain too much information.
 
 I'm using Manhatan instead of eucelidan because it's not allowed to move diagonally, so path length should be the same
 There aren't any memory leaks.
-In general performance is decent, but still not good enough for real time, on my laptop 100x100 map with worst case calculates 0.5s. there are some improvements if close to shortes path is ok that give 10x performance boost in some cases.
+In general performance is decent, but still not good enough for real time, on my laptop 100x100 map with worst case calculates 0.5s. if non perfect solution is ok, it could work 10x faster in some cases.
 Addidng multithreading could make it couple times faster, but I haven't really considered it at the beggining, and now it's a bit difficult to fit it to this solution.
 
 I tried using list instead of vector but performance was 30% worse

@@ -18,8 +18,6 @@ I tried using list instead of vector but performance was 30% worse
 Main bottleneck is inserting elements into my expanding vector, to avoid sorting I have to insert objects in the middle of the vector
 */
 
-#include<thread>
-#include <chrono>
 #include "FindPath.h"
 #include <algorithm>
 #include <iostream>
@@ -40,54 +38,54 @@ MapSearch::MapSearch(const int mapWidtht, const int mapHeightt, vector<char>* ma
 }
 void MapSearch::Insert(Point * pnt)
 {
-	
+	//toExpand->insert(toExpand->begin(),pnt);
 	//Inserting element at apropriate place to avoid sorting
 	// find_if looking for element with better values than the new one, and then inserting new one before that
 	//this is the slowest part, but still faster than sorting
-	toExpand->insert(find_if(toExpand->begin(), toExpand->end(), [pnt](const Point * Tpnt) {
-		if (Tpnt->EstimatedCostToGoal < pnt->EstimatedCostToGoal)
+	toExpand->insert(lower_bound(toExpand->begin(), toExpand->end(), pnt, [](const Point * Apnt, const Point * Bpnt) {
+		if (Apnt->EstimatedCostToGoal > Bpnt->EstimatedCostToGoal)
 			return true;
-		else if ((Tpnt->EstimatedCostToGoal == pnt->EstimatedCostToGoal)) //when estimated cost is equal it prioritizes points that are closer to start to avoid blocking paths
-			return (Tpnt->movesTillHere < pnt->movesTillHere); 
+		else if ((Apnt->EstimatedCostToGoal == Bpnt->EstimatedCostToGoal)) //when estimated cost is equal it prioritizes points that are closer to start to avoid blocking paths
+			return (Apnt->movesTillHere > Bpnt->movesTillHere);
 		else return false;
 	}), pnt);
 
 }
 
-void MapSearch::Expand(int * id, Point * Expand, vector<char>* Expanded)
-{	//This could've been done more neatly for sure
-	 //I'm checking 4 things in a row
-	 // first: am I expanding straight back to point where I came from(removin 25% of choice)
-	 // 2 am I going to be out of bounds
-	 //3 can I go there
-	 //4 did I already expanded there 
+void MapSearch::Expand(int * id, Point * Expand)
+{   //This could've been done more neatly for sure
+	//I'm checking 4 things in a row
+	// first: am I expanding straight back to point where I came from(removin 25% of choice)
+	// 2 am I going to be out of bounds
+	//3 can I go there
+	//4 did I already expanded there 
 
 	if (*id - 1 != Expand->prevPos &&
 		(*id) % mapWidth != 0 &&
-		(*map)[*id - 1] == '\x1'
-		&& (*Expanded)[(*id - 1)] == 0
-
+		(*map)[*id - 1] == 0
 		)
 	{
-		(*Expanded)[(*id - 1)] = 2;
-		Point * p = new Point(Expand->moveListTillHere, Expand->movesTillHere, *id - 1);
-		CalculateCost(p);
-		Insert(p);
+		
+			(*map)[(*id - 1)] = 1;
+			Point * p = new Point(Expand, Expand->movesTillHere, *id - 1);
+			CalculateCost(p);
+			Insert(p);
+		
 
 	}
 
 	if (
 		*id + 1 != Expand->prevPos &&
-		((*id + 1) % (mapWidth) != 0 || *id == 0) &&
-		(*map)[*id + 1] == '\x1'
-		&& (*Expanded)[*id + 1] == 0
-
+		((*id + 1) % (mapWidth) != 0 || *id == 0)&&
+		(*map)[*id + 1] == 0
 		)
 	{
-		(*Expanded)[(*id + 1)] = 2;
-		Point * p = new Point(Expand->moveListTillHere, Expand->movesTillHere, *id + 1);
-		CalculateCost(p);
-		Insert(p);
+		
+			(*map)[(*id + 1)] = 1;
+			Point * p = new Point(Expand, Expand->movesTillHere, *id + 1);
+			CalculateCost(p);
+			Insert(p);
+		
 
 	}
 
@@ -95,30 +93,30 @@ void MapSearch::Expand(int * id, Point * Expand, vector<char>* Expanded)
 
 	int k = mapWidth;
 	if (*id + mapWidth != Expand->prevPos &&
-		*id < (mapHeight*mapWidth - mapWidth) &&
-		(*map)[*id + mapWidth] == '\x1'
-		&& (*Expanded)[*id + k] == 0
-
+		*id < (mapHeight*mapWidth - mapWidth)&&
+		(*map)[*id + mapWidth] == 0
 		)
 	{
-		(*Expanded)[(*id + k)] = 2;
-		Point * p = new 	Point(Expand->moveListTillHere, Expand->movesTillHere, *id + mapWidth);
-		CalculateCost(p);
-		Insert(p);
+	
+			(*map)[(*id + k)] = 1;
+			Point * p = new     Point(Expand, Expand->movesTillHere, *id + mapWidth);
+			CalculateCost(p);
+			Insert(p);
+	
 
 	}
 
 	if (*id - mapWidth != Expand->prevPos &&
-		*id >= mapWidth &&
-		(*map)[*id - mapWidth] == '\x1'
-		&& (*Expanded)[*id - k] == 0
-
+		*id >= mapWidth&&
+		(*map)[*id - mapWidth] == 0
 		)
 	{
-		(*Expanded)[(*id - k)] = 2;
-		Point * p = new	Point(Expand->moveListTillHere, Expand->movesTillHere, *id - mapWidth);
-		CalculateCost(p);
-		Insert(p);
+		
+			(*map)[(*id - k)] = 1;
+			Point * p = new Point(Expand, Expand->movesTillHere, *id - mapWidth);
+			CalculateCost(p);
+			Insert(p);
+		
 
 	}
 }
@@ -131,10 +129,10 @@ void MapSearch::CalculateCost(Point * p)
 
 	if (p->ID != goalID) {
 		p->EstimatedCostToGoal = p->movesTillHere +
-			(abs(p->ID / mapWidth - goalID / mapWidth) + abs(p->ID%mapWidth - goalID % mapWidth)); //multiply by 1.1 before parenthesis for increased performance but not guaranteed perfect solution
+			(abs(goalID / mapWidth - p->ID / mapWidth) + abs(goalID % mapWidth - p->ID%mapWidth)); //multiply by 1.1 before parenthesis for increased performance but not guaranteed perfect solution
 	}
 	else {
-		
+
 		p->EstimatedCostToGoal = 0;
 	}
 
@@ -147,19 +145,31 @@ int FindPath(const int nStartX, const int nStartY,
 	const unsigned char* pMap, const int nMapWidth, const int nMapHeight,
 	int* pOutBuffer, const int nOutBufferSize)
 {
+	
+	
+
 	// map a vector 
 	vector<char>* map = new vector<char>();
 	map->reserve(nMapWidth*nMapHeight);
 	for (int i = 0; i < nMapWidth*nMapHeight; i++) //populating my map
 	{
-		map->push_back(*(pMap + i));
+		if (*(pMap + i) == '\x1')
+			map->push_back(0);
+		else
+			map->push_back(5);
 	}
-	vector <char> Expanded(nMapWidth*nMapHeight);
+	if ((*map)[nTargetX + nTargetY * nMapWidth] == 5 || nTargetX>nMapWidth || nMapHeight<nTargetY) {
+		return -1;
+
+	}
+
 
 	vector<Point*> * ToExpand = new vector<Point*>();
-	ToExpand->reserve(0.2*nMapWidth*nMapHeight);
-	MapSearch * mapSearch = new MapSearch(nMapWidth, nMapHeight, map, ToExpand, nTargetX + nTargetY * nMapWidth);
-	ToExpand->push_back(new Point(nStartX + nMapWidth * nStartY));
+	ToExpand->reserve(nMapWidth*nMapHeight);
+	vector<Point*> Garbage;
+	Garbage.reserve(nMapWidth*nMapHeight);
+	MapSearch * mapSearch = new MapSearch(nMapWidth, nMapHeight, map, ToExpand, nStartX + nMapWidth * nStartY);
+	ToExpand->push_back(new Point(nTargetX + nTargetY * nMapWidth));
 
 	bool solved = false;
 	int CheckedStates = 0;
@@ -173,31 +183,54 @@ int FindPath(const int nStartX, const int nStartY,
 			solved = true;
 			break;
 		}
-		if (ToExpand->back()->movesTillHere >= nOutBufferSize) //when the best possible bet is out of buffer it's safe to assume that others wont make it as well													
+		if (ToExpand->back()->movesTillHere > nOutBufferSize) //when the best possible bet is out of buffer it's safe to assume that others wont make it as well                                                    
 		{
-			//I've decided that returning -1 makes more sense than calling another function with higher buffer, cause buffer is specified for some reason and it also might be a gamplay feature. 
-			break;
+			for (int k = ToExpand->size() - 1; k >= 0; k--) {
+				delete (*ToExpand)[k];
+			}
+			for (int k = Garbage.size() - 1; k >= 0; k--) {
+				delete (Garbage)[k];
+			}
+			Garbage.clear();
+			delete mapSearch;
+			delete ToExpand;
+
+			delete map;
+			
+			const int bufSize2 =nOutBufferSize*2;
+			int* poutbuffer = new int[bufSize2];
+			pOutBuffer = poutbuffer;
+			
+			return  FindPath(nStartX, nStartY, nTargetX, nTargetY, pMap, nMapWidth, nMapHeight, pOutBuffer, bufSize2);
+		
 		}
 
-		CheckedStates++;
+		//  CheckedStates++;
+
 		Point* tmp = ToExpand->back(); // I'm using tmp because I'm going to add elements to toexpand later, andthen I wouldn't be able to pop back this element
 		ToExpand->pop_back();
 
-		mapSearch->Expand(&(tmp->ID), tmp, &Expanded); // expanding point, basically creating point objects in viable locations around selected point object
+		mapSearch->Expand(&(tmp->ID), tmp); // expanding point, basically creating point objects in viable locations around selected point object
 
-		Expanded[tmp->ID] = 1;
-		delete tmp;
-	} while (ToExpand->size() != 0);
-	cout << "Number of expanded nodes: " << CheckedStates << endl; //display amount of checked states for diagnostics
+		(*map)[tmp->ID] = 5;
 	
+		Garbage.push_back(tmp);
+	} while (ToExpand->size() != 0);
+	//cout << "Number of expanded nodes: " << CheckedStates << endl; //display amount of checked states for diagnostics
 
-	Expanded.clear();
+
 	if (solved) {
 		//fill the Buffer 
 		//would be good to make temporary buffer fills to ensure that the game doesn't lag
-		for (unsigned int i = 0; i < ToExpand->back()->moveListTillHere.size(); i++)
+		Point* tmp = ToExpand->back()->prev;
+		for (unsigned int i = ToExpand->back()->movesTillHere; i > 0; i--)
 		{
-			pOutBuffer[i] = ToExpand->back()->moveListTillHere[i];
+		
+			pOutBuffer[ToExpand->back()->movesTillHere - i] = tmp->ID;
+			
+			tmp = tmp->prev;
+			
+
 		}
 
 		int a = ToExpand->back()->movesTillHere;
@@ -205,24 +238,30 @@ int FindPath(const int nStartX, const int nStartY,
 		for (int k = ToExpand->size() - 1; k >= 0; k--) {
 			delete (*ToExpand)[k];
 		}
+		for (int k = Garbage.size() - 1; k >= 0; k--) {
+			delete (Garbage)[k];
+		}
 		delete mapSearch;
 		delete ToExpand;
+		
 		delete map;
 		return   a;
 	}
 	else
 	{
-		for (int k = ToExpand->size()-1; k >= 0; k--) {
-			delete (*ToExpand)[k ];
+		for (int k = ToExpand->size() - 1; k >= 0; k--) {
+			delete (*ToExpand)[k];
 		}
-
+		for (int k = Garbage.size() - 1; k >= 0; k--) {
+			delete (Garbage)[k];
+		}
+	
 		delete mapSearch;
 		delete ToExpand;
 		delete map;
+
 		return -1;
 	}
 
 
 }
-
-
